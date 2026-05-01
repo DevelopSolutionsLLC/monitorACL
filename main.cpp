@@ -1,14 +1,14 @@
-#include <errno.h>                                        
+#include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <dirent.h>
-#include <unistd.h>                                                            
-#include <sys/types.h>                                    
-#include <sys/inotify.h>  
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/inotify.h>
 #include <iostream>
 #include <vector>
 
-#include <stdlib.h>                                       
 using namespace std;
 
 #define EVENT_SIZE  ( sizeof (struct inotify_event) )                                         
@@ -21,10 +21,22 @@ struct folderItem {
 
 
 void setFileACL(const string &path) {
-  string command = "setfacl -R -m u:AD\\\\administrator:rwx,g:AD\\\\domain\\ users:rwx,g:AD\\\\domain\\ admins:rwx \"" + path + "\"";
-
-cout << command << endl;
-  system(command.c_str());
+  pid_t pid = fork();
+  if (pid == 0) {
+    execlp("setfacl", "setfacl", "-R", "-m",
+      "u:AD\\administrator:rwx,g:AD\\domain users:rwx,g:AD\\domain admins:rwx",
+      path.c_str(), (char *)NULL);
+    perror("execlp setfacl");
+    _exit(1);
+  } else if (pid > 0) {
+    int status;
+    waitpid(pid, &status, 0);
+    if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+      cerr << "setfacl failed for: " << path << endl;
+    }
+  } else {
+    perror("fork");
+  }
 }
 
 vector<string> getDirList(const string &path) {
