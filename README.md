@@ -1,9 +1,30 @@
 # monitorACL
 QNAP fix for Active Directory permission issue between shared group domain users.
 
-Uses inotify to create recurisve file monitor then sets specified acl with setfacl.
+Uses inotify to create recursive file monitor then sets specified ACL with setfacl.
 
-Run in autostart.sh.  Installed Entware (https://github.com/Entware/Entware/wiki/Install-on-QNAP-NAS) using http://bin.entware.net/other/Entware_1.00std.qpkg for compile tools, required, remember things don't persist on reboot so make sure everything is backed up before issuing a reboot.
+## Usage
+
+```bash
+# Foreground (for testing)
+./monitorACL /path/to/watch
+
+# Daemon mode (forks to background, writes PID to /var/run/monitorACL.pid)
+./monitorACL -d /path/to/watch
+
+# Stop the daemon
+kill $(cat /var/run/monitorACL.pid)
+```
+
+## Build
+
+```bash
+g++ -o monitorACL main.cpp
+```
+
+## Deployment
+
+Run in autostart.sh. Installed Entware (https://github.com/Entware/Entware/wiki/Install-on-QNAP-NAS) using http://bin.entware.net/other/Entware_1.00std.qpkg for compile tools, required, remember things don't persist on reboot so make sure everything is backed up before issuing a reboot.
 Here's the list of enware packages I installed to get things working:
 
 ar - 2.34-1

@@ -25,10 +25,17 @@ No external dependencies beyond standard Linux headers (`sys/inotify.h`, `dirent
 ## Usage
 
 ```bash
+# Foreground
 ./monitorACL /path/to/watch
+
+# Daemon mode — forks to background, writes PID to /var/run/monitorACL.pid
+./monitorACL -d /path/to/watch
+
+# Stop the daemon
+kill $(cat /var/run/monitorACL.pid)
 ```
 
-Runs as a foreground process. Typically launched from QNAP's `autostart.sh` to persist across reboots.
+Typically launched from QNAP's `autostart.sh` with `-d` to persist across reboots.
 
 ## Platform
 
@@ -40,3 +47,5 @@ Linux only — requires `inotify` (not available on macOS/Windows). Originally d
 - Uses `system()` to shell out to `setfacl`
 - `folderTracker` vector maps inotify watch descriptors to directory paths
 - The watch descriptor index has a +1 offset (`event->wd+1`) due to the initial vector size of 2
+- `-d` flag daemonizes via `fork()/setsid()`, writes PID to `/var/run/monitorACL.pid`
+- SIGTERM/SIGINT trigger clean shutdown: removes watches, closes fd, deletes PID file
